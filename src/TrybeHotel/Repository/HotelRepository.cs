@@ -23,21 +23,22 @@ namespace TrybeHotel.Repository
                 CityName = hotel.City!.Name,
             }).ToList();
         }
-        
+
         // 5. Desenvolva o endpoint POST /hotel
         public HotelDto AddHotel(Hotel hotel)
         {
             _context.Hotels.Add(hotel);
             _context.SaveChanges();
 
-            return new HotelDto
+            return _context.Hotels.Where(h => h.Name == hotel.Name)
+            .Select(h => new HotelDto
             {
-                HotelId = hotel.HotelId,
-                Name = hotel.Name,
-                Address = hotel.Address,
-                CityId = hotel.CityId,
-                CityName = hotel.City?.Name,
-            };
+                HotelId = h.HotelId,
+                Name = h.Name,
+                Address = h.Address,
+                CityId = h.CityId,
+                CityName = h.City!.Name,
+            }).FirstOrDefault()!;
         }
     }
 }
