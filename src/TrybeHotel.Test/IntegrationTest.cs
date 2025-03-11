@@ -1,26 +1,22 @@
 namespace TrybeHotel.Test;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Newtonsoft.Json;
 using TrybeHotel.Models;
 using TrybeHotel.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.Json;
-using System.Diagnostics;
-using System.Xml;
-using System.IO;
+using System.Net;
+using System.Text;
 
-
-
-public class IntegrationTest: IClassFixture<WebApplicationFactory<Program>>
+public class IntegrationTest : IClassFixture<WebApplicationFactory<Program>>
 {
-     public HttpClient _clientTest;
+    public HttpClient _clientTest;
 
-     public IntegrationTest(WebApplicationFactory<Program> factory)
+    public IntegrationTest(WebApplicationFactory<Program> factory)
     {
         //_factory = factory;
-        _clientTest = factory.WithWebHostBuilder(builder => {
+        _clientTest = factory.WithWebHostBuilder(builder =>
+        {
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<TrybeHotelContext>));
@@ -44,12 +40,12 @@ public class IntegrationTest: IClassFixture<WebApplicationFactory<Program>>
                     appContext.Database.EnsureCreated();
                     appContext.Database.EnsureDeleted();
                     appContext.Database.EnsureCreated();
-                    appContext.Cities.Add(new City {CityId = 1, Name = "Manaus"});
-                    appContext.Cities.Add(new City {CityId = 2, Name = "Palmas"});
+                    appContext.Cities.Add(new City { CityId = 1, Name = "Manaus" });
+                    appContext.Cities.Add(new City { CityId = 2, Name = "Palmas" });
                     appContext.SaveChanges();
-                    appContext.Hotels.Add(new Hotel {HotelId = 1, Name = "Trybe Hotel Manaus", Address = "Address 1", CityId = 1});
-                    appContext.Hotels.Add(new Hotel {HotelId = 2, Name = "Trybe Hotel Palmas", Address = "Address 2", CityId = 2});
-                    appContext.Hotels.Add(new Hotel {HotelId = 3, Name = "Trybe Hotel Ponta Negra", Address = "Addres 3", CityId = 1});
+                    appContext.Hotels.Add(new Hotel { HotelId = 1, Name = "Trybe Hotel Manaus", Address = "Address 1", CityId = 1 });
+                    appContext.Hotels.Add(new Hotel { HotelId = 2, Name = "Trybe Hotel Palmas", Address = "Address 2", CityId = 2 });
+                    appContext.Hotels.Add(new Hotel { HotelId = 3, Name = "Trybe Hotel Ponta Negra", Address = "Addres 3", CityId = 1 });
                     appContext.SaveChanges();
                     appContext.Rooms.Add(new Room { RoomId = 1, Name = "Room 1", Capacity = 2, Image = "Image 1", HotelId = 1 });
                     appContext.Rooms.Add(new Room { RoomId = 2, Name = "Room 2", Capacity = 3, Image = "Image 2", HotelId = 1 });
@@ -66,13 +62,63 @@ public class IntegrationTest: IClassFixture<WebApplicationFactory<Program>>
         }).CreateClient();
     }
 
-    [Trait("Category", "Meus testes")]
-    [Theory(DisplayName = "Executando meus testes")]
-    [InlineData("/city")]
-    public async Task TestGet(string url)
+    [Theory]
+    [InlineData("/city", HttpStatusCode.OK)]
+    [InlineData("/hotel", HttpStatusCode.OK)]
+    public async Task TestCityGet(string url, HttpStatusCode expectedStatusCode)
     {
-        var response = await _clientTest.GetAsync(url);
-        Assert.Equal(System.Net.HttpStatusCode.OK, response?.StatusCode);
+
+        (await _clientTest.GetAsync(url)).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, (await _clientTest.GetAsync(url)).StatusCode);
     }
 
+    [Theory]
+    [InlineData("/room/1", HttpStatusCode.OK)]
+    public async Task TestGetRoomById(string url, HttpStatusCode expectedStatusCode)
+    {
+        (await _clientTest.GetAsync(url)).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, (await _clientTest.GetAsync(url)).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/city", "Rio de Janeiro", HttpStatusCode.Created)]
+    public async Task TestPostCity(string url, string cityName, HttpStatusCode expectedStatusCode)
+    {
+        (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new { Name = cityName }),
+            Encoding.UTF8, "application/json"
+        ))).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new { Name = cityName }),
+            Encoding.UTF8, "application/json"
+        ))).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/hotel", "Trybe Hotel S�o Paulo", "Address 4", 2, HttpStatusCode.Created)]
+    public async Task TestPostHotel(string url, string hotelName, string address, int cityId, HttpStatusCode expectedStatusCode)
+    {
+        (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new { Name = hotelName, Address = address, CityId = cityId }),
+            Encoding.UTF8, "application/json"
+        ))).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new { Name = hotelName, Address = address, CityId = cityId }),
+            Encoding.UTF8, "application/json"
+        ))).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/room", "Room 10", 5, "Image 10", 2, HttpStatusCode.Created)]
+    public async Task TestPostRoom(string url, string roomName, int capacity, string image, int hotelId, HttpStatusCode expectedStatusCode)
+    {
+        (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new Room { Name = roomName, Capacity = capacity, Image = image, HotelId = hotelId }),
+            Encoding.UTF8, "application/json"
+        ))).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new Room { Name = roomName, Capacity = capacity, Image = image, HotelId = hotelId }),
+            Encoding.UTF8, "application/json"
+        ))).StatusCode);
+    }
 }

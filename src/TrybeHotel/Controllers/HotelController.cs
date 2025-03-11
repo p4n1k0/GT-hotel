@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TrybeHotel.Models;
 using TrybeHotel.Repository;
-using TrybeHotel.Dto;
 
 namespace TrybeHotel.Controllers
 {
