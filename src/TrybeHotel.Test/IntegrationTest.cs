@@ -67,58 +67,48 @@ public class IntegrationTest : IClassFixture<WebApplicationFactory<Program>>
     [InlineData("/hotel", HttpStatusCode.OK)]
     public async Task TestCityGet(string url, HttpStatusCode expectedStatusCode)
     {
-
-        (await _clientTest.GetAsync(url)).EnsureSuccessStatusCode();
-        Assert.Equal(expectedStatusCode, (await _clientTest.GetAsync(url)).StatusCode);
+        var response = (await _clientTest.GetAsync(url)).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, response.StatusCode);
     }
 
     [Theory]
     [InlineData("/room/1", HttpStatusCode.OK)]
     public async Task TestGetRoomById(string url, HttpStatusCode expectedStatusCode)
     {
-        (await _clientTest.GetAsync(url)).EnsureSuccessStatusCode();
-        Assert.Equal(expectedStatusCode, (await _clientTest.GetAsync(url)).StatusCode);
+        var response = (await _clientTest.GetAsync(url)).EnsureSuccessStatusCode();
+        Assert.Equal(expectedStatusCode, response.StatusCode);
     }
 
     [Theory]
     [InlineData("/city", "Rio de Janeiro", HttpStatusCode.Created)]
     public async Task TestPostCity(string url, string cityName, HttpStatusCode expectedStatusCode)
     {
-        (await _clientTest.PostAsync(url, new StringContent(
+        var response = (await _clientTest.PostAsync(url, new StringContent(
             JsonConvert.SerializeObject(new { Name = cityName }),
             Encoding.UTF8, "application/json"
         ))).EnsureSuccessStatusCode();
-        Assert.Equal(expectedStatusCode, (await _clientTest.PostAsync(url, new StringContent(
-            JsonConvert.SerializeObject(new { Name = cityName }),
-            Encoding.UTF8, "application/json"
-        ))).StatusCode);
+        Assert.Equal(expectedStatusCode, response.StatusCode);
     }
 
     [Theory]
     [InlineData("/hotel", "Trybe Hotel S�o Paulo", "Address 4", 2, HttpStatusCode.Created)]
     public async Task TestPostHotel(string url, string hotelName, string address, int cityId, HttpStatusCode expectedStatusCode)
     {
-        (await _clientTest.PostAsync(url, new StringContent(
+        var response = (await _clientTest.PostAsync(url, new StringContent(
             JsonConvert.SerializeObject(new { Name = hotelName, Address = address, CityId = cityId }),
             Encoding.UTF8, "application/json"
         ))).EnsureSuccessStatusCode();
-        Assert.Equal(expectedStatusCode, (await _clientTest.PostAsync(url, new StringContent(
-            JsonConvert.SerializeObject(new { Name = hotelName, Address = address, CityId = cityId }),
-            Encoding.UTF8, "application/json"
-        ))).StatusCode);
+        Assert.Equal(expectedStatusCode, response.StatusCode);
     }
 
     [Theory]
     [InlineData("/room", "Room 10", 5, "Image 10", 2, HttpStatusCode.Created)]
     public async Task TestPostRoom(string url, string roomName, int capacity, string image, int hotelId, HttpStatusCode expectedStatusCode)
     {
-        (await _clientTest.PostAsync(url, new StringContent(
-            JsonConvert.SerializeObject(new Room { Name = roomName, Capacity = capacity, Image = image, HotelId = hotelId }),
+        var response = (await _clientTest.PostAsync(url, new StringContent(
+            JsonConvert.SerializeObject(new { Name = roomName, Capacity = capacity, Image = image, HotelId = hotelId }),
             Encoding.UTF8, "application/json"
         ))).EnsureSuccessStatusCode();
-        Assert.Equal(expectedStatusCode, (await _clientTest.PostAsync(url, new StringContent(
-            JsonConvert.SerializeObject(new Room { Name = roomName, Capacity = capacity, Image = image, HotelId = hotelId }),
-            Encoding.UTF8, "application/json"
-        ))).StatusCode);
+        Assert.Equal(expectedStatusCode, response.StatusCode);
     }
 }
